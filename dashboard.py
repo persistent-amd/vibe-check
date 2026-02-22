@@ -127,6 +127,10 @@ if st.session_state.data:
 
     df = pd.DataFrame(st.session_state.data)
 
+# Sort newest first
+if "created_at" in df.columns:
+    df = df.sort_values(by="created_at", ascending=False)
+
     # ---------- METRICS ----------
     st.subheader("📊 Overview")
 
