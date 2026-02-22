@@ -49,6 +49,34 @@ if "data" not in st.session_state:
     except:
         st.session_state.data = []
 
+# ---------- CSV UPLOAD ----------
+st.subheader("📂 Upload Feedback CSV")
+
+uploaded_file = st.file_uploader(
+    "Upload CSV with a column named 'text'",
+    type=["csv"]
+)
+
+if uploaded_file:
+    bulk_df = pd.read_csv(uploaded_file)
+
+    if "text" in bulk_df.columns:
+        for text in bulk_df["text"]:
+            try:
+                response = requests.post(API_URL, json={"text": text})
+                result = response.json()
+
+                st.session_state.data.append({
+                    "feedback": text,
+                    "category": result["category"]
+                })
+            except:
+                st.error("Error uploading some entries")
+
+        st.success("Bulk feedback processed successfully!")
+    else:
+        st.error("CSV must contain a column named 'text'")
+
 # ---------- INPUT CARD ----------
 st.subheader("📝 Submit Feedback")
 
@@ -116,6 +144,43 @@ if st.session_state.data:
     colB.plotly_chart(pie, use_container_width=True)
 
     st.divider()
+
+    # ---------- TREND GRAPH ----------
+    st.subheader("📉 Sentiment Trend Over Time")
+
+    if "created_at" in df.columns:
+        df["created_at"] = pd.to_datetime(df["created_at"])
+        df["date"] = df["created_at"].dt.date
+
+        trend = df.groupby(["date", "category"]).size().reset_index(name="count")
+
+        trend_chart = px.line(
+            trend,
+            x="date",
+            y="count",
+            color="category",
+            markers=True
+        )
+
+        st.plotly_chart(trend_chart, use_container_width=True)
+    else:
+        st.info("Trend data will appear as more feedback is collected.")
+
+    # ---------- CONCERN ALERT ----------
+    st.subheader("🚨 Alerts")
+
+    concern_count = (df["category"] == "Concern").sum()
+    total = len(df)
+
+    if total > 0:
+        concern_ratio = concern_count / total
+
+        if concern_ratio > 0.5:
+            st.error("⚠️ High number of concerns detected!")
+        elif concern_ratio > 0.3:
+            st.warning("⚠️ Concerns are rising.")
+        else:
+            st.success("✅ Student sentiment stable.")
 
     # ---------- TABLE ----------
     st.subheader("🗂 Feedback Log")
