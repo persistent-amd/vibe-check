@@ -91,7 +91,10 @@ if st.button("Analyze Feedback", use_container_width=True):
 
             category = result["category"]
 
-            st.success(f"✅ Category: {category}")
+            if result.get("duplicate"):
+                st.warning(f"⚠️ Already exists → Category: {category}")
+            else:
+                st.success(f"✅ Category: {category}")
 
             st.rerun()   # 🔥 reload data from Supabase instantly
 
