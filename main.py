@@ -25,17 +25,22 @@ class Feedback(BaseModel):
 
 def classify_feedback(text):
     prompt = f"""
-Classify the student feedback into one category:
+Classify the student feedback into ONE of the following categories:
 
-Categories:
-1. Concern
-2. Appreciation
-3. Suggestion
+Concerns
+Complaints
+Negative Feedback
+Appreciation
+Positive Feedback
+Suggestions
+Questions
+Neutral
+Other
 
 Feedback:
 {text}
 
-Respond with only the category name.
+Respond with ONLY the category name.
 """
 
     url = "https://api.groq.com/openai/v1/chat/completions"
@@ -57,6 +62,15 @@ Respond with only the category name.
     result = response.json()
 
     category = result["choices"][0]["message"]["content"].strip()
+
+    # normalize similar meanings
+    normalization_map = {
+        "Complaints": "Concerns",
+        "Negative Feedback": "Concerns",
+        "Positive Feedback": "Appreciation",
+    }
+
+    category = normalization_map.get(category, category)
 
     return category
 

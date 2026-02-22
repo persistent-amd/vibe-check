@@ -42,6 +42,44 @@ This distributed architecture ensures smooth performance under high user load.
 
 ---
 
+## Sentiment Classification Design
+
+Our system performs fine-grained feedback classification to capture nuanced student sentiment.
+
+### Detailed Categories Deteced
+- Concerns  
+- Complaints  
+- Suggestions  
+- Questions  
+- Appreciation  
+- Positive Feedback  
+- Negative Feedback  
+- Neutral / Other  
+
+### Actionable Insight Grouping
+
+To improve decision-making and visualization clarity, related categories are grouped in the analytics dashboard:
+
+- **Issues & Negative Sentiment**
+  - Concerns
+  - Compla ints
+  - Negative Feedback
+
+- **Positive Sentiment**
+  - Appreciation
+  - Positive Feedback
+
+- **Improvement & Engagement**
+  - Suggestions
+  - Questions
+
+- **Neutral**
+  - Neutral / Other
+
+This layered approach preserves detailed sentiment insights while presenting administrators with clear, actionable trends.
+
+---
+
 ## 4. Important Links
 
 **Live Demo Link:**  

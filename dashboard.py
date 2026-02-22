@@ -139,11 +139,12 @@ if "created_at" in df.columns:
     # ---------- METRICS ----------
     st.subheader("📊 Overview")
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
 
-    col1.metric("Concerns", (df["category"] == "Concern").sum())
+    col1.metric("Concerns", (df["category"] == "Concerns").sum())
     col2.metric("Appreciation", (df["category"] == "Appreciation").sum())
-    col3.metric("Suggestions", (df["category"] == "Suggestion").sum())
+    col3.metric("Suggestions", (df["category"] == "Suggestions").sum())
+    col4.metric("Questions", (df["category"] == "Questions").sum())
 
     st.divider()
 
