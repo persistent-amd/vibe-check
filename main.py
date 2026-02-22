@@ -63,17 +63,30 @@ Respond with only the category name.
 
 @app.post("/analyze")
 def analyze_feedback(feedback: Feedback):
-    category = classify_feedback(feedback.text)
 
-    # 🔹 INSERT INTO SUPABASE
-    response = supabase.table("feedback").insert({
-        "text": feedback.text,
-        "category": category
-    }).execute()
+    # clean input
+    text = feedback.text.strip()
 
-    #print("SUPABASE RESPONSE:", response)   # ADD THIS LINE for debug table insertions
+    if not text:
+        return {"error": "Empty feedback not allowed"}
+
+    category = classify_feedback(text)
+
+    # 🔹 Prevent duplicates (case-insensitive)
+    existing = (
+        supabase.table("feedback")
+        .select("id")
+        .ilike("text", text)
+        .execute()
+    )
+
+    if not existing.data:
+        supabase.table("feedback").insert({
+            "text": text,
+            "category": category
+        }).execute()
 
     return {
-        "feedback": feedback.text,
+        "feedback": text,
         "category": category
     }
