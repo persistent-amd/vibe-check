@@ -49,3 +49,27 @@ https://vibe-check-nlp-cloudypfztxfpsujlmbu8xqxfks.streamlit.app/
 
 **GitHub Repository:**  
 https://github.com/persistent-amd/vibe-check.git
+
+---
+
+## Live Dashboard Preview
+
+<p align="center">
+  <img src="dashboard.png" width="700">
+</p>
+
+---
+
+## Sentiment Analytics (Real-Time Insights)
+
+<p align="center">
+  <img src="analytics.png" width="700">
+</p>
+
+---
+
+## Feedback Log & Historical Data
+
+<p align="center">
+  <img src="log.png" width="700">
+</p>
