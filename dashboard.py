@@ -41,13 +41,17 @@ st.markdown("""
 
 st.divider()
 
-# ---------- SESSION STORAGE ----------
-if "data" not in st.session_state:
-    try:
-        response = supabase.table("feedback").select("*").order("created_at").execute()
-        st.session_state.data = response.data if response.data else []
-    except:
-        st.session_state.data = []
+# ---------- FETCH LATEST DATA ----------
+try:
+    response = supabase.table("feedback") \
+        .select("*") \
+        .order("created_at", desc=True) \
+        .execute()
+
+    data = response.data if response.data else []
+
+except Exception as e:
+    data = []
 
 # ---------- CSV UPLOAD ----------
 st.subheader("📂 Upload Feedback CSV")
@@ -122,10 +126,11 @@ if st.button("Analyze Feedback", use_container_width=True):
         st.warning("Please enter feedback")
 
 st.divider()
-# ---------- DISPLAY DATA ----------
-if st.session_state.data:
 
-    df = pd.DataFrame(st.session_state.data)
+# ---------- DISPLAY DATA ----------
+if data:
+
+    df = pd.DataFrame(data)
 
 # Sort newest first
 if "created_at" in df.columns:
