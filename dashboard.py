@@ -63,19 +63,16 @@ if uploaded_file:
     if "text" in bulk_df.columns:
         for text in bulk_df["text"]:
             try:
-                response = requests.post(API_URL, json={"text": text})
-                result = response.json()
-
-                st.session_state.data.append({
-                    "feedback": text,
-                    "category": result["category"]
-                })
+                requests.post(API_URL, json={"text": text})
             except:
                 st.error("Error uploading some entries")
 
         st.success("Bulk feedback processed successfully!")
+        st.rerun()   # reload dashboard with fresh DB data
     else:
         st.error("CSV must contain a column named 'text'")
+
+
 
 # ---------- INPUT CARD ----------
 st.subheader("📝 Submit Feedback")
@@ -184,4 +181,14 @@ if st.session_state.data:
 
     # ---------- TABLE ----------
     st.subheader("🗂 Feedback Log")
-    st.dataframe(df, use_container_width=True)
+    # Clean & format table
+    display_df = df.copy()
+
+    if "created_at" in display_df.columns:
+        display_df["created_at"] = pd.to_datetime(display_df["created_at"]).dt.strftime("%Y-%m-%d %H:%M")
+
+    display_df = display_df[["text", "category", "created_at"]]
+
+    display_df.columns = ["Feedback", "Category", "Time"]
+
+    st.dataframe(display_df, use_container_width=True)
