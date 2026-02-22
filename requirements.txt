@@ -3,3 +3,6 @@ uvicorn
 requests
 python-dotenv
 supabase
+streamlit
+pandas
+plotly
