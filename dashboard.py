@@ -17,7 +17,9 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-API_URL = "http://127.0.0.1:8000/analyze"
+# API_URL = "http://127.0.0.1:8000/analyze"
+
+API_URL = "https://vibe-check-g1at.onrender.com/analyze"
 
 st.set_page_config(
     page_title="Vibe Check Dashboard",
@@ -42,7 +44,7 @@ if "data" not in st.session_state:
         st.session_state.data = response.data if response.data else []
     except:
         st.session_state.data = []
-        
+
 # ---------- INPUT CARD ----------
 st.subheader("📝 Submit Feedback")
 
