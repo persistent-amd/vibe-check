@@ -87,19 +87,25 @@ if st.button("Analyze Feedback", use_container_width=True):
     if feedback_text.strip() != "":
         try:
             response = requests.post(API_URL, json={"text": feedback_text})
-            result = response.json()
 
-            category = result["category"]
+            # ✅ ensure server responded correctly
+            if response.status_code == 200:
+                result = response.json()
+                category = result["category"]
 
-            if result.get("duplicate"):
-                st.warning(f"⚠️ Already exists → Category: {category}")
+                if result.get("duplicate"):
+                    st.warning(f"⚠️ Already exists → Category: {category}")
+                else:
+                    st.success(f"✅ Category: {category}")
+
+                st.rerun()   # reload fresh DB data
+
             else:
-                st.success(f"✅ Category: {category}")
+                st.error("⚠️ Server error. Please try again.")
 
-            st.rerun()   # 🔥 reload data from Supabase instantly
+        except requests.exceptions.RequestException:
+            st.error("⚠️ Cannot reach AI server. It may be waking up (free tier).")
 
-        except:
-            st.error("⚠️ Cannot connect to AI server. Make sure FastAPI is running.")
     else:
         st.warning("Please enter feedback")
 
