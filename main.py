@@ -64,7 +64,6 @@ Respond with only the category name.
 @app.post("/analyze")
 def analyze_feedback(feedback: Feedback):
 
-    # clean input
     text = feedback.text.strip()
 
     if not text:
@@ -72,7 +71,7 @@ def analyze_feedback(feedback: Feedback):
 
     category = classify_feedback(text)
 
-    # 🔹 Prevent duplicates (case-insensitive)
+    # 🔹 Check duplicates (case-insensitive)
     existing = (
         supabase.table("feedback")
         .select("id")
@@ -80,7 +79,9 @@ def analyze_feedback(feedback: Feedback):
         .execute()
     )
 
-    if not existing.data:
+    duplicate = bool(existing.data)
+
+    if not duplicate:
         supabase.table("feedback").insert({
             "text": text,
             "category": category
@@ -88,5 +89,6 @@ def analyze_feedback(feedback: Feedback):
 
     return {
         "feedback": text,
-        "category": category
+        "category": category,
+        "duplicate": duplicate
     }
