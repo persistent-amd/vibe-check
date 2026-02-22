@@ -73,7 +73,19 @@ if uploaded_file:
         st.error("CSV must contain a column named 'text'")
 
 
+# Show last result message after rerun
+if "last_result" in st.session_state:
+    if st.session_state.last_result["duplicate"]:
+        st.warning(
+            f"⚠️ Already exists → Category: {st.session_state.last_result['category']}"
+        )
+    else:
+        st.success(
+            f"✅ Category: {st.session_state.last_result['category']}"
+        )
 
+    del st.session_state.last_result
+    
 # ---------- INPUT CARD ----------
 st.subheader("📝 Submit Feedback")
 
@@ -88,23 +100,23 @@ if st.button("Analyze Feedback", use_container_width=True):
         try:
             response = requests.post(API_URL, json={"text": feedback_text})
 
-            # ✅ ensure server responded correctly
             if response.status_code == 200:
                 result = response.json()
                 category = result["category"]
 
-                if result.get("duplicate"):
-                    st.warning(f"⚠️ Already exists → Category: {category}")
-                else:
-                    st.success(f"✅ Category: {category}")
+                # store result so it survives rerun
+                st.session_state.last_result = {
+                    "duplicate": result.get("duplicate"),
+                    "category": category
+                }
 
-                st.rerun()   # reload fresh DB data
+                st.rerun()
 
             else:
                 st.error("⚠️ Server error. Please try again.")
 
         except requests.exceptions.RequestException:
-            st.error("⚠️ Cannot reach AI server. It may be waking up (free tier).")
+            st.error("⚠️ Cannot reach AI server. It may be waking up.")
 
     else:
         st.warning("Please enter feedback")
