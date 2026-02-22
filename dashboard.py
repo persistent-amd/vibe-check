@@ -85,7 +85,7 @@ if "last_result" in st.session_state:
         )
 
     del st.session_state.last_result
-    
+
 # ---------- INPUT CARD ----------
 st.subheader("📝 Submit Feedback")
 
@@ -98,13 +98,13 @@ if st.button("Analyze Feedback", use_container_width=True):
 
     if feedback_text.strip() != "":
         try:
-            response = requests.post(API_URL, json={"text": feedback_text})
+            with st.spinner("Analyzing feedback..."):
+                response = requests.post(API_URL, json={"text": feedback_text})
 
             if response.status_code == 200:
                 result = response.json()
                 category = result["category"]
 
-                # store result so it survives rerun
                 st.session_state.last_result = {
                     "duplicate": result.get("duplicate"),
                     "category": category
