@@ -83,6 +83,7 @@ feedback_text = st.text_area(
 )
 
 if st.button("Analyze Feedback", use_container_width=True):
+
     if feedback_text.strip() != "":
         try:
             response = requests.post(API_URL, json={"text": feedback_text})
@@ -92,11 +93,7 @@ if st.button("Analyze Feedback", use_container_width=True):
 
             st.success(f"✅ Category: {category}")
 
-            st.session_state.data.append({
-                "feedback": feedback_text,
-                "category": category,
-                "time": datetime.now().strftime("%H:%M:%S")
-            })
+            st.rerun()   # 🔥 reload data from Supabase instantly
 
         except:
             st.error("⚠️ Cannot connect to AI server. Make sure FastAPI is running.")
@@ -104,7 +101,6 @@ if st.button("Analyze Feedback", use_container_width=True):
         st.warning("Please enter feedback")
 
 st.divider()
-
 # ---------- DISPLAY DATA ----------
 if st.session_state.data:
 
