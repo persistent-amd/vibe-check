@@ -22,7 +22,7 @@ A cloud-native dashboard that converts student feedback into real-time sentiment
 <p align="center">
   <img src="architecture_vibe_check.png" width="800">
 </p>
-**Figure:** Cloud-native architecture showing frontend, backend, AI inference, and database layers.
+Figure: Cloud-native architecture showing frontend, backend, AI inference, and database layers.
 
 ---
 
