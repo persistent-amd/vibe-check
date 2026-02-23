@@ -19,6 +19,14 @@ A cloud-native dashboard that converts student feedback into real-time sentiment
 
 ---
 
+## System Architecture
+
+<p align="center">
+  <img src="architecture_vibe_check.png" width="800">
+</p>
+
+---
+
 ## 3. Proof of "Zero-Cost" Cloud Usage
 
 ### Free-tier services used:
@@ -111,3 +119,19 @@ https://github.com/persistent-amd/vibe-check.git
 <p align="center">
   <img src="log.png" width="700">
 </p>
+
+## Known Limitations
+
+Requires internet connectivity for AI inference
+
+Cold start delay may occur on free-tier hosting
+
+## Future Improvements
+
+Word cloud visualization
+
+Multi-language support
+
+Admin alert notifications
+
+Role-based access control
