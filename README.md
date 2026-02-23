@@ -1,5 +1,3 @@
-# SECTION 1: THE SUBMISSION TEMPLATE
-
 ## 1. Project Overview
 
 **Project Name:** The "Vibe Check" Dashboard (Sentiment Analysis)  
