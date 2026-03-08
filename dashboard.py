@@ -182,7 +182,6 @@ if "current_example" not in st.session_state:
     st.session_state.current_example = random.choice(example_feedbacks)
 
 # ---------- QUICK START ----------
-st.markdown("### 💡 Try it in 10 seconds")
 st.markdown(
     """
     <style>
@@ -196,6 +195,8 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+st.markdown("### 💡 Try it in 10 seconds")
+
 
 st.markdown('<div class="help-box">', unsafe_allow_html=True)
 with st.expander("How to use this tool", expanded=False):
