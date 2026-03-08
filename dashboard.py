@@ -183,6 +183,19 @@ if st.button("Analyze Feedback", use_container_width=True):
 
 st.divider()
 
+# Show last result message after rerun
+if "last_result" in st.session_state:
+    if st.session_state.last_result["duplicate"]:
+        st.warning(
+            f"⚠️ Already exists → Category: {st.session_state.last_result['category']}"
+        )
+    else:
+        st.success(
+            f"✅ Category: {st.session_state.last_result['category']}"
+        )
+
+    del st.session_state.last_result
+
 # ---------- CSV UPLOAD ----------
 st.subheader("📂 Batch Feedback Upload CSV")
 
@@ -206,19 +219,6 @@ if uploaded_file:
     else:
         st.error("CSV must contain a column named 'text'")
 
-
-# Show last result message after rerun
-if "last_result" in st.session_state:
-    if st.session_state.last_result["duplicate"]:
-        st.warning(
-            f"⚠️ Already exists → Category: {st.session_state.last_result['category']}"
-        )
-    else:
-        st.success(
-            f"✅ Category: {st.session_state.last_result['category']}"
-        )
-
-    del st.session_state.last_result
 
 
 st.divider()
