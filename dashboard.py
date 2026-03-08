@@ -42,13 +42,49 @@ st.set_page_config(
     layout="wide"
 )
 
+st.markdown("""
+<style>
+
+/* Gradient Title */
+.gradient-text {
+    font-size: 42px;
+    font-weight: 800;
+    background: linear-gradient(90deg,#6EE7B7,#3B82F6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Metric cards */
+[data-testid="metric-container"] {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 15px;
+    border-radius: 12px;
+}
+
+/* Section spacing */
+.block-container {
+    padding-top: 2rem;
+}
+
+/* Divider styling */
+hr {
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
 
 import requests
 # ---------- HEADER ----------
 col1, col2 = st.columns([4,1])
 
 with col1:
-    st.title("Feedback Vibe Check Dashboard")
+    st.markdown('<div class="gradient-text">Feedback Vibe Check Dashboard</div>', unsafe_allow_html=True)
     st.caption("AI-powered campus feedback intelligence • FastAPI + LLM + Supabase + Streamlit")
 
 with col2:
@@ -185,6 +221,8 @@ if "last_result" in st.session_state:
     del st.session_state.last_result
 
 
+st.divider()
+
 # ---------- DISPLAY DATA ----------
 if data:
 
@@ -264,6 +302,8 @@ if "created_at" in df.columns:
             st.warning("⚠️ Concerns are rising.")
         else:
             st.success("✅ Student sentiment stable.")
+
+    st.divider()
 
     # ---------- TABLE ----------
     st.subheader("🗂 Feedback Log")
