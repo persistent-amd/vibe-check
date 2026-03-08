@@ -99,7 +99,7 @@ import requests
 col1, col2 = st.columns([4,1])
 
 with col1:
-    st.markdown('<div class="gradient-text">Campus Feedback Vibe Check Dashboard</div>', unsafe_allow_html=True)
+    st.markdown('<div class="gradient-text">Campus Sentiment Dashboard</div>', unsafe_allow_html=True)
     st.caption("AI-powered campus feedback intelligence • FastAPI + LLM + Supabase + Streamlit")
 
 with col2:
@@ -182,23 +182,21 @@ if "current_example" not in st.session_state:
     st.session_state.current_example = random.choice(example_feedbacks)
 
 # ---------- QUICK START ----------
-st.markdown(
-    """
-    <style>
-    .help-box {
-        border: 2px solid #FFD166;
-        border-radius: 10px;
-        padding: 10px;
-        margin-bottom: 20px;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+
 st.markdown("### 💡 Try it in 10 seconds")
 
-
 st.markdown('<div class="help-box">', unsafe_allow_html=True)
+st.markdown("""
+<style>
+
+/* highlight help expander */
+div[data-testid="stExpander"] {
+    border: 2px solid #FFD166;
+    border-radius: 10px;
+}
+
+</style>
+""", unsafe_allow_html=True)
 with st.expander("How to use this tool", expanded=False):
 
     st.write("""
@@ -245,7 +243,6 @@ This AI tool analyzes **student feedback** and categorizes it into:
 Hostel WiFi is slow
 Library closes too early
 Cafeteria food quality is poor""")
-    st.markdown('</div>', unsafe_allow_html=True)
 
 st.divider()
 
