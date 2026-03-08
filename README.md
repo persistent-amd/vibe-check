@@ -6,7 +6,8 @@
 **One-Liner:**  
 A cloud-native dashboard that converts student feedback into real-time sentiment insights for smarter campus decisions.
 
----
+**Live Demo Link:**  
+https://vibe-check-nlp-cloudypfztxfpsujlmbu8xqxfks.streamlit.app/
 
 ## 2. Technical Architecture
 
