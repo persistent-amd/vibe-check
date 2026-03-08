@@ -37,7 +37,7 @@ if "backend_warmed" not in st.session_state:
         pass
 
 st.set_page_config(
-    page_title="Feedback Vibe Check Dashboard",
+    page_title="Campus Feedback Vibe Check Dashboard",
     page_icon="🎓",
     layout="wide"
 )
@@ -153,7 +153,7 @@ feedback_text = st.text_area(
     "Enter student feedback:",
     placeholder="Example: Hostel WiFi is unusable at night..."
 )
-
+result_container = st.empty()
 if st.button("Analyze Feedback", use_container_width=True):
 
     if feedback_text.strip() != "":
@@ -183,18 +183,18 @@ if st.button("Analyze Feedback", use_container_width=True):
 
 st.divider()
 
-# Show last result message after rerun
-if "last_result" in st.session_state:
-    if st.session_state.last_result["duplicate"]:
-        st.warning(
-            f"⚠️ Already exists → Category: {st.session_state.last_result['category']}"
-        )
-    else:
-        st.success(
-            f"✅ Category: {st.session_state.last_result['category']}"
-        )
+with result_container:
+    if "last_result" in st.session_state:
+        if st.session_state.last_result["duplicate"]:
+            st.info(
+                f"🔁 Similar feedback detected\n\nCategory: **{st.session_state.last_result['category']}**\n\nStored for trend analysis."
+            )
+        else:
+            st.success(
+                f"✅ Category: **{st.session_state.last_result['category']}**"
+            )
 
-    del st.session_state.last_result
+        del st.session_state.last_result
 
 # ---------- CSV UPLOAD ----------
 st.subheader("📂 Batch Feedback Upload CSV")
@@ -205,24 +205,56 @@ uploaded_file = st.file_uploader(
 )
 
 if uploaded_file:
+
     bulk_df = pd.read_csv(uploaded_file)
 
-    if "text" in bulk_df.columns:
-        for text in bulk_df["text"]:
-            try:
-                requests.post(API_URL, json={"text": text})
-            except:
-                st.error("Error uploading some entries")
-
-        st.success("Bulk feedback processed successfully!")
-        st.rerun()   # reload dashboard with fresh DB data
-    else:
+    if "text" not in bulk_df.columns:
         st.error("CSV must contain a column named 'text'")
+    else:
 
+        st.info(f"{len(bulk_df)} feedback entries detected")
 
+        st.write("Preview:")
+        st.dataframe(bulk_df.head())
+
+        if st.button("Analyze CSV Feedback", use_container_width=True):
+
+            new_count = 0
+            reused_count = 0
+
+            progress = st.progress(0)
+
+            for i, text in enumerate(bulk_df["text"]):
+
+                try:
+                    response = requests.post(API_URL, json={"text": text})
+
+                    if response.status_code == 200:
+                        result = response.json()
+
+                        if result.get("duplicate"):
+                            reused_count += 1
+                        else:
+                            new_count += 1
+
+                except:
+                    pass
+
+                progress.progress((i + 1) / len(bulk_df))
+
+            st.success(
+                f"""
+CSV processed successfully!
+
+New classifications: {new_count}
+Reused classifications: {reused_count}
+Total processed: {len(bulk_df)}
+"""
+            )
+
+            st.rerun()
 
 st.divider()
-
 # ---------- DISPLAY DATA ----------
 if data:
 

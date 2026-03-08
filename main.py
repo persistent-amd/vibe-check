@@ -35,8 +35,6 @@ def classify_feedback(text):
     prompt = f"""
 Classify the student feedback into ONE of the following categories:
 
-Respond with ONLY one of these EXACT words:
-
 Concern
 Complaint
 Negative Feedback
@@ -73,58 +71,52 @@ Respond with ONLY the category name.
 
     category = result["choices"][0]["message"]["content"].strip()
 
-    # normalize model outputs
+    # normalize similar meanings
     normalization_map = {
-
-        # plural fixes
-        "Concerns": "Concern",
-        "Suggestions": "Suggestion",
-
-        # negative grouping
-        "Complaint": "Concern",
-        "Complaints": "Concern",
-        "Negative Feedback": "Concern",
-
-        # positive grouping
+        "Complaints": "Concerns",
+        "Negative Feedback": "Concerns",
         "Positive Feedback": "Appreciation",
-
-        # neutral grouping
-        "Neutral": "Other",
     }
 
     category = normalization_map.get(category, category)
 
     return category
 
+    @app.post("/analyze")
+    def analyze_feedback(feedback: Feedback):
 
-@app.post("/analyze")
-def analyze_feedback(feedback: Feedback):
+        text = feedback.text.strip()
 
-    text = feedback.text.strip()
+        if not text:
+            return {"error": "Empty feedback not allowed"}
 
-    if not text:
-        return {"error": "Empty feedback not allowed"}
+        # 🔹 Check duplicates first (case-insensitive)
+        existing = (
+            supabase.table("feedback")
+            .select("category")
+            .ilike("text", text)
+            .limit(1)
+            .execute()
+        )
 
-    category = classify_feedback(text)
+        duplicate = bool(existing.data)
 
-    # 🔹 Check duplicates (case-insensitive)
-    existing = (
-        supabase.table("feedback")
-        .select("id")
-        .ilike("text", text)
-        .execute()
-    )
+        if duplicate:
+            # reuse existing classification
+            category = existing.data[0]["category"]
 
-    duplicate = bool(existing.data)
+        else:
+            # classify using LLM
+            category = classify_feedback(text)
 
-    if not duplicate:
+        # 🔹 Always insert feedback (important for trend frequency)
         supabase.table("feedback").insert({
             "text": text,
             "category": category
         }).execute()
 
-    return {
-        "feedback": text,
-        "category": category,
-        "duplicate": duplicate
-    }
+        return {
+            "feedback": text,
+            "category": category,
+            "duplicate": duplicate
+        }
