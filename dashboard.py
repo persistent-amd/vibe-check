@@ -382,20 +382,34 @@ if uploaded_file:
                 progress.progress((i + 1) / len(bulk_df))
 
             # ---------- RESULT SUMMARY ----------
-            st.success(
-                f"""
-✅ **Batch Analysis Complete**
-
-• **{len(bulk_df)} feedback processed**  
-• **{new_count} new entries added**  
-• **{duplicate_count} similar feedback recorded for analysis**
-"""
-            )
+            st.session_state.csv_result = {
+                "processed": len(bulk_df),
+                "new": new_count,
+                "duplicate": duplicate_count
+            }
 
             st.rerun()
 
     else:
         st.error("CSV must contain a column named 'text'")
+# ---------- SHOW CSV RESULT ----------
+if "csv_result" in st.session_state:
+
+    r = st.session_state.csv_result
+
+    st.success(
+        f"""
+✅ **Batch Analysis Complete**
+
+• **{r['processed']} feedback processed**  
+• **{r['new']} new entries added**  
+• **{r['duplicate']} similar feedback recorded for analysis**
+"""
+    )
+
+    st.caption("Similar feedback is still useful for identifying recurring issues.")
+
+    del st.session_state.csv_result
 
 st.divider()
 # ---------- DISPLAY DATA ----------
