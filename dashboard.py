@@ -42,33 +42,61 @@ st.set_page_config(
     layout="wide"
 )
 
-# ---------- MODERN HEADER ----------
-st.markdown("""
-    <h1 style='text-align: center;'>Feedback Vibe Check Dashboard</h1>
-    <p style='text-align: center; font-size:18px; color:gray;'>
-    Real-time student sentiment intelligence
-    </p>
-""", unsafe_allow_html=True)
 
-st.caption("⚡ AI feedback analysis powered by FastAPI, LLM inference, Supabase, and Streamlit.")
+import requests
+# ---------- HEADER ----------
+col1, col2 = st.columns([4,1])
+
+with col1:
+    st.title("Feedback Vibe Check Dashboard")
+    st.caption("AI-powered campus feedback intelligence • FastAPI + LLM + Supabase + Streamlit")
+
+with col2:
+    try:
+        r = requests.get(API_URL.replace("/analyze", "/health"), timeout=3)
+
+        if r.status_code == 200:
+            st.success("🟢 System Online")
+
+        else:
+            st.warning("🟡 Waking up")
+
+    except:
+        st.error("🔴 Offline")
 
 st.info(
-    "⏳ If the system has been inactive, the backend may take up to **60 seconds** "
-    "to wake up on the first request (free cloud hosting). "
-    "Subsequent requests respond in ~2 seconds."
+    "⏳ If inactive, the backend may take **up to 60 seconds** to wake up "
+    "(free cloud hosting). After waking, responses take ~2 seconds."
 )
 
-# backend status indicator
-try:
-    r = requests.get(API_URL.replace("/analyze", "/health"), timeout=3)
-    if r.status_code == 200:
-        st.success("🟢 AI Backend Online")
-    else:
-        st.warning("🟡 Backend waking up... may take up to 60 seconds")
-except:
-    st.error("🔴 Backend offline, submit feedback to wake it up")
 
-st.divider()
+# # ---------- MODERN HEADER ----------
+# st.markdown("""
+#     <h1 style='text-align: center;'>Feedback Vibe Check Dashboard</h1>
+#     <p style='text-align: center; font-size:18px; color:gray;'>
+#     Real-time student sentiment intelligence
+#     </p>
+# """, unsafe_allow_html=True)
+
+# st.caption("⚡ AI feedback analysis powered by FastAPI, LLM inference, Supabase, and Streamlit.")
+
+# st.info(
+#     "⏳ If the system has been inactive, the backend may take up to **60 seconds** "
+#     "to wake up on the first request (free cloud hosting). "
+#     "Subsequent requests respond in ~2 seconds."
+# )
+
+# # backend status indicator
+# try:
+#     r = requests.get(API_URL.replace("/analyze", "/health"), timeout=3)
+#     if r.status_code == 200:
+#         st.success("🟢 AI Backend Online")
+#     else:
+#         st.warning("🟡 Backend waking up... may take up to 60 seconds")
+# except:
+#     st.error("🔴 Backend offline, submit feedback to wake it up")
+
+# st.divider()
 
 # ---------- FETCH LATEST DATA ----------
 try:
@@ -169,8 +197,9 @@ if "created_at" in df.columns:
     # ---------- METRICS ----------
     st.subheader("📊 Overview")
 
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4 = st.columns(4, gap="large")
 
+    st.metric("Total Feedback", len(df))
     col1.metric("Concerns", (df["category"] == "Concerns").sum())
     col2.metric("Appreciation", (df["category"] == "Appreciation").sum())
     col3.metric("Suggestions", (df["category"] == "Suggestions").sum())
