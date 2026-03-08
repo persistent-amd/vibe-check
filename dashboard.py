@@ -105,6 +105,76 @@ st.info(
     "(free cloud hosting). After waking, responses take ~2 seconds."
 )
 
+import random
+
+# Example feedback pool
+example_feedbacks = [
+    "Hostel WiFi disconnects frequently at night",
+    "Library should stay open longer during exams",
+    "Faculty members are very supportive",
+    "Cafeteria food quality needs improvement",
+    "College bus timings should be extended",
+    "More charging ports needed in the library",
+    "Internet speed in labs is too slow",
+    "Campus cleanliness is excellent",
+    "Hostel rooms need better maintenance",
+    "Sports facilities should be upgraded"
+]
+
+# Initialize example state
+if "current_example" not in st.session_state:
+    st.session_state.current_example = random.choice(example_feedbacks)
+
+# ---------- QUICK START ----------
+st.markdown("### 🚀 Try it in 10 seconds")
+
+with st.expander("How to use this tool", expanded=True):
+
+    st.write("""
+This AI tool analyzes **student feedback** and categorizes it into:
+
+• Concern  
+• Appreciation  
+• Suggestion  
+• Question  
+• Other
+""")
+
+    st.write("**Quick steps:**")
+
+    st.write("""
+1️⃣ Enter student feedback  
+2️⃣ Click **Analyze Feedback**  
+3️⃣ View the detected category
+""")
+
+    st.write("---")
+
+    st.write("**Example feedback:**")
+
+    st.info(st.session_state.current_example)
+
+    col1, col2 = st.columns(2)
+
+    if col1.button("Use this example"):
+        st.session_state.example_text = st.session_state.current_example
+
+    if col2.button("Generate another example"):
+        st.session_state.current_example = random.choice(example_feedbacks)
+        st.rerun()
+
+    # NEW LINE
+    st.caption("💡 Tip: Try multiple similar complaints to see trend detection in analytics.")
+
+    st.write("---")
+
+    st.write("**CSV format for batch upload:**")
+
+    st.code("""text
+Hostel WiFi is slow
+Library closes too early
+Cafeteria food quality is poor""")
+    st.divider()
 
 # # ---------- previous MODERN HEADER ----------
 # st.markdown("""
@@ -151,12 +221,14 @@ st.subheader("📝 Submit Feedback (Single)")
 
 feedback_text = st.text_area(
     "Enter student feedback:",
+    value=st.session_state.get("example_text", ""),
     placeholder="Example: Hostel WiFi is unusable at night..."
 )
+
 result_container = st.empty()
 if st.button("Analyze Feedback", use_container_width=True):
 
-    if feedback_text.strip() != "":
+    if feedback_text and feedback_text.strip():
         try:
             with st.spinner("Analyzing feedback..."):
                 response = requests.post(API_URL, json={"text": feedback_text})
