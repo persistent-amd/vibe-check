@@ -82,41 +82,41 @@ Respond with ONLY the category name.
 
     return category
 
-    @app.post("/analyze")
-    def analyze_feedback(feedback: Feedback):
 
-        text = feedback.text.strip()
+@app.post("/analyze")
+def analyze_feedback(feedback: Feedback):
 
-        if not text:
-            return {"error": "Empty feedback not allowed"}
+    text = feedback.text.strip()
 
-        # 🔹 Check duplicates first (case-insensitive)
-        existing = (
-            supabase.table("feedback")
-            .select("category")
-            .ilike("text", text)
-            .limit(1)
-            .execute()
-        )
+    if not text:
+        return {"error": "Empty feedback not allowed"}
 
-        duplicate = bool(existing.data)
+    # 🔹 Check duplicates first
+    existing = (
+        supabase.table("feedback")
+        .select("category")
+        .ilike("text", text)
+        .limit(1)
+        .execute()
+    )
 
-        if duplicate:
-            # reuse existing classification
-            category = existing.data[0]["category"]
+    duplicate = bool(existing.data)
 
-        else:
-            # classify using LLM
-            category = classify_feedback(text)
+    if duplicate:
+        # reuse stored category instead of calling LLM
+        category = existing.data[0]["category"]
+    else:
+        # classify using LLM
+        category = classify_feedback(text)
 
-        # 🔹 Always insert feedback (important for trend frequency)
-        supabase.table("feedback").insert({
-            "text": text,
-            "category": category
-        }).execute()
+    # 🔹 Always insert feedback for trend analysis
+    supabase.table("feedback").insert({
+        "text": text,
+        "category": category
+    }).execute()
 
-        return {
-            "feedback": text,
-            "category": category,
-            "duplicate": duplicate
-        }
+    return {
+        "feedback": text,
+        "category": category,
+        "duplicate": duplicate
+    }
