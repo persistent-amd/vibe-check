@@ -19,7 +19,9 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 app = FastAPI()
 
 # Health check endpoint (for uptime monitors)
-@app.get("/health")
+from fastapi import Response
+
+@app.api_route("/health", methods=["GET", "HEAD"])
 def health():
     return {"status": "ok"}
 
