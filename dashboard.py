@@ -25,19 +25,48 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 API_URL = "https://vibe-check-g1at.onrender.com/analyze"
 
+import requests
+import streamlit as st
+
+# Wake backend on first dashboard load
+if "backend_warmed" not in st.session_state:
+    try:
+        requests.get(API_URL.replace("/analyze", "/docs"), timeout=5)
+        st.session_state.backend_warmed = True
+    except:
+        pass
+
 st.set_page_config(
-    page_title="Vibe Check Dashboard",
+    page_title="Feedback Vibe Check Dashboard",
     page_icon="🎓",
     layout="wide"
 )
 
 # ---------- MODERN HEADER ----------
 st.markdown("""
-    <h1 style='text-align: center;'>🎓 Vibe Check Dashboard</h1>
+    <h1 style='text-align: center;'>Student Feedback Vibe Check Dashboard</h1>
     <p style='text-align: center; font-size:18px; color:gray;'>
     Real-time student sentiment intelligence
     </p>
 """, unsafe_allow_html=True)
+
+st.caption("⚡ AI feedback analysis powered by FastAPI, LLM inference, Supabase, and Streamlit.")
+
+# st.info(
+#     "⏳ If the system has been inactive, the backend may take up to **60 seconds** "
+#     "to wake up on the first request (free cloud hosting). "
+#     "Subsequent requests respond in ~2 seconds."
+# )
+
+# backend status indicator
+try:
+    r = requests.get(API_URL.replace("/analyze", "/health"), timeout=3)
+    if r.status_code == 200:
+        st.success("🟢 AI Backend Online")
+    else:
+        st.warning("🟡 Backend waking up... may take up to 60 seconds")
+except:
+    st.error("🔴 Backend offline")
 
 st.divider()
 
@@ -53,8 +82,45 @@ try:
 except Exception as e:
     data = []
 
+# ---------- INPUT CARD ----------
+st.subheader("📝 Submit Feedback (Single)")
+
+feedback_text = st.text_area(
+    "Enter student feedback:",
+    placeholder="Example: Hostel WiFi is unusable at night..."
+)
+
+if st.button("Analyze Feedback", use_container_width=True):
+
+    if feedback_text.strip() != "":
+        try:
+            with st.spinner("Analyzing feedback..."):
+                response = requests.post(API_URL, json={"text": feedback_text})
+
+            if response.status_code == 200:
+                result = response.json()
+                category = result["category"]
+
+                st.session_state.last_result = {
+                    "duplicate": result.get("duplicate"),
+                    "category": category
+                }
+
+                st.rerun()
+
+            else:
+                st.error("⚠️ Server error. Please try again.")
+
+        except requests.exceptions.RequestException:
+            st.error("⚠️ Cannot reach AI server. It may be waking up.")
+
+    else:
+        st.warning("Please enter feedback")
+
+st.divider()
+
 # ---------- CSV UPLOAD ----------
-st.subheader("📂 Upload Feedback CSV")
+st.subheader("📂 Batch Feedback Upload CSV")
 
 uploaded_file = st.file_uploader(
     "Upload CSV with a column named 'text'",
@@ -90,42 +156,6 @@ if "last_result" in st.session_state:
 
     del st.session_state.last_result
 
-# ---------- INPUT CARD ----------
-st.subheader("📝 Submit Feedback")
-
-feedback_text = st.text_area(
-    "Enter student feedback:",
-    placeholder="Example: Hostel WiFi is unusable at night..."
-)
-
-if st.button("Analyze Feedback", use_container_width=True):
-
-    if feedback_text.strip() != "":
-        try:
-            with st.spinner("Analyzing feedback..."):
-                response = requests.post(API_URL, json={"text": feedback_text})
-
-            if response.status_code == 200:
-                result = response.json()
-                category = result["category"]
-
-                st.session_state.last_result = {
-                    "duplicate": result.get("duplicate"),
-                    "category": category
-                }
-
-                st.rerun()
-
-            else:
-                st.error("⚠️ Server error. Please try again.")
-
-        except requests.exceptions.RequestException:
-            st.error("⚠️ Cannot reach AI server. It may be waking up.")
-
-    else:
-        st.warning("Please enter feedback")
-
-st.divider()
 
 # ---------- DISPLAY DATA ----------
 if data:

@@ -18,6 +18,12 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 app = FastAPI()
 
+# Health check endpoint (for uptime monitors)
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 class Feedback(BaseModel):
