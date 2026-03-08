@@ -85,35 +85,73 @@ Respond with ONLY the category name.
 
 @app.post("/analyze")
 def analyze_feedback(feedback: Feedback):
-
     text = feedback.text.strip()
 
     if not text:
         return {"error": "Empty feedback not allowed"}
 
-    # 🔹 Check duplicates first
-    existing = (
-        supabase.table("feedback")
-        .select("category")
-        .ilike("text", text)
-        .limit(1)
-        .execute()
-    )
+    # ---- safe duplicate check ----
+    try:
+        resp = (
+            supabase.table("feedback")
+            .select("category")
+            .ilike("text", text)  # keep your matching logic here (case-insensitive)
+            .limit(1)
+            .execute()
+        )
+    except Exception as e:
+        # If the DB query fails, log (optional) and continue to classify normally
+        # (avoids breaking user flow if Supabase temporarily errors)
+        print("Supabase check error:", e)
+        resp = None
 
-    duplicate = bool(existing.data)
+    # normalize response -> ensure it's a list we can index safely
+    existing_data = []
+    if resp and getattr(resp, "data", None):
+        # resp.data should be a list of rows; guard the type
+        if isinstance(resp.data, list):
+            existing_data = resp.data
+        else:
+            # fallback: try to coerce
+            try:
+                existing_data = list(resp.data)
+            except Exception:
+                existing_data = []
+
+    duplicate = len(existing_data) > 0
 
     if duplicate:
-        # reuse stored category instead of calling LLM
-        category = existing.data[0]["category"]
+        # safe extraction of category from the first row
+        first_row = existing_data[0]
+        if isinstance(first_row, dict):
+            category = first_row.get("category") or "Other"
+        else:
+            # if the row is not a dict, coerce to string
+            try:
+                category = str(first_row)
+            except Exception:
+                category = "Other"
     else:
         # classify using LLM
         category = classify_feedback(text)
+        if not category:
+            category = "Other"
 
-    # 🔹 Always insert feedback for trend analysis
-    supabase.table("feedback").insert({
-        "text": text,
-        "category": category
-    }).execute()
+    # ---- Always insert the feedback (preserve frequency) ----
+    try:
+        supabase.table("feedback").insert({
+            "text": text,
+            "category": category
+        }).execute()
+    except Exception as e:
+        # optional: fail softly and return helpful info
+        print("Supabase insert error:", e)
+        return {
+            "feedback": text,
+            "category": category,
+            "duplicate": duplicate,
+            "warning": "Failed to insert into DB (check server logs)"
+        }
 
     return {
         "feedback": text,
