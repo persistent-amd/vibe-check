@@ -228,20 +228,50 @@ if data:
 
     df = pd.DataFrame(data)
 
-# Sort newest first
-if "created_at" in df.columns:
-    df = df.sort_values(by="created_at", ascending=False)
+    # ----- CATEGORY NORMALIZATION FOR ANALYTICS -----
+    category_map = {
+        "Concern": "Concern",
+        "Complaint": "Concern",
+        "Negative Feedback": "Concern",
+
+        "Appreciation": "Appreciation",
+        "Positive Feedback": "Appreciation",
+
+        "Suggestion": "Suggestion",
+
+        "Question": "Question",
+
+        "Neutral": "Other",
+        "Other": "Other"
+    }
+
+    df["main_category"] = df["category"].map(category_map).fillna("Other")
+
+    # Sort newest first
+    if "created_at" in df.columns:
+        df = df.sort_values(by="created_at", ascending=False)
 
     # ---------- METRICS ----------
     st.subheader("📊 Overview")
 
-    col1, col2, col3, col4 = st.columns(4, gap="large")
+    counts = df["main_category"].value_counts()
 
-    st.metric("Total Feedback", len(df))
-    col1.metric("Concerns", (df["category"] == "Concerns").sum())
-    col2.metric("Appreciation", (df["category"] == "Appreciation").sum())
-    col3.metric("Suggestions", (df["category"] == "Suggestions").sum())
-    col4.metric("Questions", (df["category"] == "Questions").sum())
+    concerns = counts.get("Concern", 0)
+    appreciation = counts.get("Appreciation", 0)
+    suggestions = counts.get("Suggestion", 0)
+    questions = counts.get("Question", 0)
+    other = counts.get("Other", 0)
+
+    total_feedback = len(df)
+
+    col0, col1, col2, col3, col4, col5 = st.columns(6, gap="large")
+
+    col0.metric("Total Feedback", total_feedback)
+    col1.metric("Concern", concerns)
+    col2.metric("Appreciation", appreciation)
+    col3.metric("Suggestion", suggestions)
+    col4.metric("Question", questions)
+    col5.metric("Other", other)
 
     st.divider()
 
@@ -250,18 +280,19 @@ if "created_at" in df.columns:
 
     colA, colB = st.columns(2)
 
-    category_counts = df["category"].value_counts()
+    category_counts = df["main_category"].value_counts()
 
     # Bar chart
     colA.bar_chart(category_counts)
 
-    # Pie chart (modern)
+    # Pie chart
     pie = px.pie(
         values=category_counts.values,
         names=category_counts.index,
         title="Category Distribution",
-        hole=0.45   # donut style (modern look)
+        hole=0.45
     )
+
     colB.plotly_chart(pie, use_container_width=True)
 
     st.divider()
@@ -270,20 +301,22 @@ if "created_at" in df.columns:
     st.subheader("📉 Sentiment Trend Over Time")
 
     if "created_at" in df.columns:
+
         df["created_at"] = pd.to_datetime(df["created_at"])
         df["date"] = df["created_at"].dt.date
 
-        trend = df.groupby(["date", "category"]).size().reset_index(name="count")
+        trend = df.groupby(["date", "main_category"]).size().reset_index(name="count")
 
         trend_chart = px.line(
             trend,
             x="date",
             y="count",
-            color="category",
+            color="main_category",
             markers=True
         )
 
         st.plotly_chart(trend_chart, use_container_width=True)
+
     else:
         st.info("Trend data will appear as more feedback is collected.")
 
@@ -305,16 +338,46 @@ if "created_at" in df.columns:
 
     st.divider()
 
-    # ---------- TABLE ----------
-    st.subheader("🗂 Feedback Log")
-    # Clean & format table
-    display_df = df.copy()
+# ---------- TABLE ----------
+st.subheader("🗂 Feedback Log")
 
-    if "created_at" in display_df.columns:
-        display_df["created_at"] = pd.to_datetime(display_df["created_at"]).dt.strftime("%Y-%m-%d %H:%M")
+display_df = df.copy()
 
-    display_df = display_df[["text", "category", "created_at"]]
+# ensure datetime format
+if "created_at" in display_df.columns:
+    display_df["created_at"] = pd.to_datetime(display_df["created_at"])
 
-    display_df.columns = ["Feedback", "Category", "Time"]
+    # sort newest first
+    display_df = display_df.sort_values(by="created_at", ascending=False)
 
-    st.dataframe(display_df, use_container_width=True)
+    # format AFTER sorting
+    display_df["created_at"] = display_df["created_at"].dt.strftime("%Y-%m-%d %H:%M")
+
+# add category indicators
+category_badges = {
+    "Concern": "🔴 Concern",
+    "Complaint": "🔴 Complaint",
+    "Negative Feedback": "🔴 Negative Feedback",
+
+    "Appreciation": "🟢 Appreciation",
+    "Positive Feedback": "🟢 Positive Feedback",
+
+    "Suggestion": "🟡 Suggestion",
+    "Question": "❓ Question",
+
+    "Neutral": "⚪ Neutral",
+    "Other": "⚪ Other"
+}
+
+display_df["category"] = display_df["category"].map(category_badges).fillna(display_df["category"])
+
+# keep required columns
+display_df = display_df[["text", "category", "created_at"]]
+
+# rename for UI
+display_df.columns = ["Feedback", "Category", "Time"]
+
+# add row numbering
+display_df.index = pd.Index(range(1, len(display_df)+1))
+
+st.dataframe(display_df, use_container_width=True)

@@ -35,13 +35,15 @@ def classify_feedback(text):
     prompt = f"""
 Classify the student feedback into ONE of the following categories:
 
-Concerns
-Complaints
+Respond with ONLY one of these EXACT words:
+
+Concern
+Complaint
 Negative Feedback
 Appreciation
 Positive Feedback
-Suggestions
-Questions
+Suggestion
+Question
 Neutral
 Other
 
@@ -71,11 +73,23 @@ Respond with ONLY the category name.
 
     category = result["choices"][0]["message"]["content"].strip()
 
-    # normalize similar meanings
+    # normalize model outputs
     normalization_map = {
-        "Complaints": "Concerns",
-        "Negative Feedback": "Concerns",
+
+        # plural fixes
+        "Concerns": "Concern",
+        "Suggestions": "Suggestion",
+
+        # negative grouping
+        "Complaint": "Concern",
+        "Complaints": "Concern",
+        "Negative Feedback": "Concern",
+
+        # positive grouping
         "Positive Feedback": "Appreciation",
+
+        # neutral grouping
+        "Neutral": "Other",
     }
 
     category = normalization_map.get(category, category)
