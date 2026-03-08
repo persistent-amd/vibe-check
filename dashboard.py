@@ -106,7 +106,7 @@ st.info(
 )
 
 
-# # ---------- MODERN HEADER ----------
+# # ---------- previous MODERN HEADER ----------
 # st.markdown("""
 #     <h1 style='text-align: center;'>Feedback Vibe Check Dashboard</h1>
 #     <p style='text-align: center; font-size:18px; color:gray;'>
@@ -256,24 +256,18 @@ if data:
 
     counts = df["main_category"].value_counts()
 
-    concerns = counts.get("Concern", 0)
-    appreciation = counts.get("Appreciation", 0)
-    suggestions = counts.get("Suggestion", 0)
-    questions = counts.get("Question", 0)
-    other = counts.get("Other", 0)
+    metrics = {
+        "Total Feedback": len(df),
+        "Concerns": counts.get("Concern", 0),
+        "Appreciation": counts.get("Appreciation", 0),
+        "Suggestions": counts.get("Suggestion", 0),
+        "Questions": counts.get("Question", 0)
+    }
 
-    total_feedback = len(df)
+    cols = st.columns(len(metrics))
 
-    col0, col1, col2, col3, col4, col5 = st.columns(6, gap="large")
-
-    col0.metric("Total Feedback", total_feedback)
-    col1.metric("Concern", concerns)
-    col2.metric("Appreciation", appreciation)
-    col3.metric("Suggestion", suggestions)
-    col4.metric("Question", questions)
-    col5.metric("Other", other)
-
-    st.divider()
+    for col, (label, value) in zip(cols, metrics.items()):
+        col.metric(label, value)
 
     # ---------- CHARTS ----------
     st.subheader("📈 Sentiment Analytics")
@@ -381,46 +375,95 @@ if data:
     else:
         st.success("✅ No critical issues detected")
 
-# ---------- TABLE ----------
-st.subheader("🗂 Feedback Log")
+    # ---------- ISSUE CLUSTERING ----------
+    st.subheader("🔥 Top Campus Issues")
 
-display_df = df.copy()
+    issue_keywords = {
+        "wifi": "WiFi Connectivity",
+        "internet": "Internet Issues",
+        "hostel": "Hostel Facilities",
+        "food": "Cafeteria / Food",
+        "canteen": "Cafeteria / Food",
+        "library": "Library Facilities",
+        "charging": "Charging Ports",
+        "network": "Network Problems",
+        "cleanliness": "Campus Cleanliness"
+    }
 
-# ensure datetime format
-if "created_at" in display_df.columns:
-    display_df["created_at"] = pd.to_datetime(display_df["created_at"])
+    issue_counts = {}
 
-    # sort newest first
-    display_df = display_df.sort_values(by="created_at", ascending=False)
+    for keyword, issue_name in issue_keywords.items():
+        count = df["text"].str.lower().str.contains(keyword).sum()
 
-    # format AFTER sorting
-    display_df["created_at"] = display_df["created_at"].dt.strftime("%Y-%m-%d %H:%M")
+        if count > 0:
+            issue_counts[issue_name] = issue_counts.get(issue_name, 0) + count
 
-# add category indicators
-category_badges = {
-    "Concern": "🔴 Concern",
-    "Complaint": "🔴 Complaint",
-    "Negative Feedback": "🔴 Negative Feedback",
+    if issue_counts:
 
-    "Appreciation": "🟢 Appreciation",
-    "Positive Feedback": "🟢 Positive Feedback",
+        issue_df = pd.DataFrame(
+            issue_counts.items(),
+            columns=["Issue", "Mentions"]
+        ).sort_values("Mentions", ascending=False)
 
-    "Suggestion": "🟡 Suggestion",
-    "Question": "❓ Question",
+        # show top 5
+        top_issues = issue_df.head(5)
 
-    "Neutral": "⚪ Neutral",
-    "Other": "⚪ Other"
-}
+        st.table(top_issues)
 
-display_df["category"] = display_df["category"].map(category_badges).fillna(display_df["category"])
+        # visual chart
+        issue_chart = px.bar(
+            top_issues,
+            x="Mentions",
+            y="Issue",
+            orientation="h",
+            title="Most Reported Campus Issues"
+        )
 
-# keep required columns
-display_df = display_df[["text", "category", "created_at"]]
+        st.plotly_chart(issue_chart, use_container_width=True)
 
-# rename for UI
-display_df.columns = ["Feedback", "Category", "Time"]
+    else:
+        st.info("No issue patterns detected yet.")
 
-# add row numbering
-display_df.index = pd.Index(range(1, len(display_df)+1))
+    # ---------- TABLE ----------
+    st.subheader("🗂 Feedback Log")
 
-st.dataframe(display_df, use_container_width=True)
+    display_df = df.copy()
+
+    # ensure datetime format
+    if "created_at" in display_df.columns:
+        display_df["created_at"] = pd.to_datetime(display_df["created_at"])
+
+        # sort newest first
+        display_df = display_df.sort_values(by="created_at", ascending=False)
+
+        # format AFTER sorting
+        display_df["created_at"] = display_df["created_at"].dt.strftime("%Y-%m-%d %H:%M")
+
+    # add category indicators
+    category_badges = {
+        "Concern": "🔴 Concern",
+        "Complaint": "🔴 Complaint",
+        "Negative Feedback": "🔴 Negative Feedback",
+
+        "Appreciation": "🟢 Appreciation",
+        "Positive Feedback": "🟢 Positive Feedback",
+
+        "Suggestion": "🟡 Suggestion",
+        "Question": "❓ Question",
+
+        "Neutral": "⚪ Neutral",
+        "Other": "⚪ Other"
+    }
+
+    display_df["category"] = display_df["category"].map(category_badges).fillna(display_df["category"])
+
+    # keep required columns
+    display_df = display_df[["text", "category", "created_at"]]
+
+    # rename for UI
+    display_df.columns = ["Feedback", "Category", "Time"]
+
+    # add row numbering
+    display_df.index = pd.Index(range(1, len(display_df)+1))
+
+    st.dataframe(display_df, use_container_width=True)
