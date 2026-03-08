@@ -44,7 +44,7 @@ st.set_page_config(
 
 # ---------- MODERN HEADER ----------
 st.markdown("""
-    <h1 style='text-align: center;'>Student Feedback Vibe Check Dashboard</h1>
+    <h1 style='text-align: center;'>Feedback Vibe Check Dashboard</h1>
     <p style='text-align: center; font-size:18px; color:gray;'>
     Real-time student sentiment intelligence
     </p>
@@ -52,11 +52,11 @@ st.markdown("""
 
 st.caption("⚡ AI feedback analysis powered by FastAPI, LLM inference, Supabase, and Streamlit.")
 
-# st.info(
-#     "⏳ If the system has been inactive, the backend may take up to **60 seconds** "
-#     "to wake up on the first request (free cloud hosting). "
-#     "Subsequent requests respond in ~2 seconds."
-# )
+st.info(
+    "⏳ If the system has been inactive, the backend may take up to **60 seconds** "
+    "to wake up on the first request (free cloud hosting). "
+    "Subsequent requests respond in ~2 seconds."
+)
 
 # backend status indicator
 try:
@@ -66,7 +66,7 @@ try:
     else:
         st.warning("🟡 Backend waking up... may take up to 60 seconds")
 except:
-    st.error("🔴 Backend offline")
+    st.error("🔴 Backend offline, submit feedback to wake it up")
 
 st.divider()
 
