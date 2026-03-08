@@ -320,23 +320,66 @@ if data:
     else:
         st.info("Trend data will appear as more feedback is collected.")
 
-    # ---------- CONCERN ALERT ----------
+    # ---------- ALERT SYSTEM ----------
     st.subheader("🚨 Alerts")
 
-    concern_count = (df["category"] == "Concern").sum()
-    total = len(df)
+    alerts = []
 
-    if total > 0:
-        concern_ratio = concern_count / total
+    if "created_at" in df.columns:
 
-        if concern_ratio > 0.5:
-            st.error("⚠️ High number of concerns detected!")
-        elif concern_ratio > 0.3:
-            st.warning("⚠️ Concerns are rising.")
-        else:
-            st.success("✅ Student sentiment stable.")
+        df["created_at"] = pd.to_datetime(df["created_at"])
 
-    st.divider()
+        now = pd.Timestamp.now()
+        last_24h = df[df["created_at"] > now - pd.Timedelta(hours=24)]
+        prev_24h = df[(df["created_at"] <= now - pd.Timedelta(hours=24)) &
+                    (df["created_at"] > now - pd.Timedelta(hours=48))]
+
+        # 1️⃣ Concern spike detection
+        concern_last = (last_24h["main_category"] == "Concern").sum()
+        concern_prev = (prev_24h["main_category"] == "Concern").sum()
+
+        if concern_prev > 0:
+            change = ((concern_last - concern_prev) / concern_prev) * 100
+
+            if change > 50:
+                alerts.append(f"🚨 Concern spike detected (+{int(change)}% in last 24h)")
+
+        # 2️⃣ Keyword issue detection
+        issue_keywords = {
+            "wifi": "📶 WiFi complaints rising",
+            "hostel": "🏠 Hostel related complaints increasing",
+            "food": "🍽 Cafeteria complaints detected",
+            "library": "📚 Library related feedback rising",
+            "internet": "🌐 Internet connectivity issues reported"
+        }
+
+        text_lower = df["text"].str.lower()
+
+        for keyword, message in issue_keywords.items():
+            count = text_lower.str.contains(keyword).sum()
+
+            if count >= 3:
+                alerts.append(f"{message} ({count} mentions)")
+
+        # 3️⃣ Unanswered questions
+        question_count = (df["main_category"] == "Question").sum()
+
+        if question_count >= 3:
+            alerts.append(f"❓ {question_count} student questions need attention")
+
+        # 4️⃣ Negative sentiment trend
+        negative_ratio = (df["main_category"] == "Concern").sum() / len(df)
+
+        if negative_ratio > 0.4:
+            alerts.append("📉 Negative sentiment is unusually high")
+
+    # ---------- DISPLAY ALERTS ----------
+
+    if alerts:
+        for alert in alerts:
+            st.warning(alert)
+    else:
+        st.success("✅ No critical issues detected")
 
 # ---------- TABLE ----------
 st.subheader("🗂 Feedback Log")
