@@ -199,7 +199,7 @@ if "created_at" in df.columns:
 
     col1, col2, col3, col4 = st.columns(4, gap="large")
 
-    st.metric("Total Feedback", len(df))
+    #st.metric("Total Feedback", len(df))
     col1.metric("Concerns", (df["category"] == "Concerns").sum())
     col2.metric("Appreciation", (df["category"] == "Appreciation").sum())
     col3.metric("Suggestions", (df["category"] == "Suggestions").sum())
