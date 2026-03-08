@@ -347,22 +347,19 @@ uploaded_file = st.file_uploader(
 )
 
 if uploaded_file:
-
     bulk_df = pd.read_csv(uploaded_file)
 
-    if "text" not in bulk_df.columns:
-        st.error("CSV must contain a column named 'text'")
-    else:
+    if "text" in bulk_df.columns:
 
         st.info(f"{len(bulk_df)} feedback entries detected")
 
         st.write("Preview:")
-        st.dataframe(bulk_df.head())
+        st.dataframe(bulk_df.head(), use_container_width=True)
 
         if st.button("Analyze CSV Feedback", use_container_width=True):
 
             new_count = 0
-            reused_count = 0
+            duplicate_count = 0
 
             progress = st.progress(0)
 
@@ -375,26 +372,30 @@ if uploaded_file:
                         result = response.json()
 
                         if result.get("duplicate"):
-                            reused_count += 1
+                            duplicate_count += 1
                         else:
                             new_count += 1
 
                 except:
-                    pass
+                    st.error("Error processing some entries")
 
                 progress.progress((i + 1) / len(bulk_df))
 
+            # ---------- RESULT SUMMARY ----------
             st.success(
                 f"""
-CSV processed successfully!
+✅ **Batch Analysis Complete**
 
-New classifications: {new_count}
-Reused classifications: {reused_count}
-Total processed: {len(bulk_df)}
+• **{len(bulk_df)} feedback processed**  
+• **{new_count} new entries added**  
+• **{duplicate_count} similar feedback recorded for analysis**
 """
             )
 
             st.rerun()
+
+    else:
+        st.error("CSV must contain a column named 'text'")
 
 st.divider()
 # ---------- DISPLAY DATA ----------
