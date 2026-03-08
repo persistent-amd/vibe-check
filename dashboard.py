@@ -9,6 +9,21 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
+import streamlit as st
+
+# Always start page at top after reload
+st.markdown(
+    """
+    <script>
+    window.scrollTo(0,0);
+    </script>
+    """,
+    unsafe_allow_html=True
+)
+
+
+
 SUPABASE_URL = os.getenv("SUPABASE_URL") or st.secrets.get("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY") or st.secrets.get("SUPABASE_KEY")
 
@@ -84,7 +99,7 @@ import requests
 col1, col2 = st.columns([4,1])
 
 with col1:
-    st.markdown('<div class="gradient-text">Feedback Vibe Check Dashboard</div>', unsafe_allow_html=True)
+    st.markdown('<div class="gradient-text">Campus Feedback Vibe Check Dashboard</div>', unsafe_allow_html=True)
     st.caption("AI-powered campus feedback intelligence • FastAPI + LLM + Supabase + Streamlit")
 
 with col2:
@@ -92,13 +107,54 @@ with col2:
         r = requests.get(API_URL.replace("/analyze", "/health"), timeout=3)
 
         if r.status_code == 200:
-            st.success("🟢 System Online")
+            status_html = """
+            <div style="
+                margin-top:14px;
+                background:linear-gradient(90deg,#1f7a4c,#2ecc71);
+                padding:8px 14px;
+                border-radius:8px;
+                color:white;
+                text-align:center;
+                font-weight:500;
+                font-size:14px;
+            ">
+            🟢 System Online
+            </div>
+            """
 
         else:
-            st.warning("🟡 Waking up")
+            status_html = """
+            <div style="
+                margin-top:14px;
+                background:#c9a227;
+                padding:8px 14px;
+                border-radius:8px;
+                color:white;
+                text-align:center;
+                font-weight:500;
+                font-size:14px;
+            ">
+            🟡 Waking up
+            </div>
+            """
 
     except:
-        st.error("🔴 Offline")
+        status_html = """
+        <div style="
+            margin-top:14px;
+            background:#c0392b;
+            padding:8px 14px;
+            border-radius:8px;
+            color:white;
+            text-align:center;
+            font-weight:500;
+            font-size:14px;
+        ">
+        🔴 Offline
+        </div>
+        """
+
+    st.markdown(status_html, unsafe_allow_html=True)
 
 st.info(
     "⏳ If inactive, the backend may take **up to 60 seconds** to wake up "
@@ -126,9 +182,23 @@ if "current_example" not in st.session_state:
     st.session_state.current_example = random.choice(example_feedbacks)
 
 # ---------- QUICK START ----------
-st.markdown("### 🚀 Try it in 10 seconds")
+st.markdown("### 💡 Try it in 10 seconds")
+st.markdown(
+    """
+    <style>
+    .help-box {
+        border: 2px solid #FFD166;
+        border-radius: 10px;
+        padding: 10px;
+        margin-bottom: 20px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
-with st.expander("How to use this tool", expanded=True):
+st.markdown('<div class="help-box">', unsafe_allow_html=True)
+with st.expander("How to use this tool", expanded=False):
 
     st.write("""
 This AI tool analyzes **student feedback** and categorizes it into:
@@ -174,7 +244,9 @@ This AI tool analyzes **student feedback** and categorizes it into:
 Hostel WiFi is slow
 Library closes too early
 Cafeteria food quality is poor""")
-    st.divider()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+st.divider()
 
 # # ---------- previous MODERN HEADER ----------
 # st.markdown("""
@@ -365,7 +437,8 @@ if data:
         "Concerns": counts.get("Concern", 0),
         "Appreciation": counts.get("Appreciation", 0),
         "Suggestions": counts.get("Suggestion", 0),
-        "Questions": counts.get("Question", 0)
+        "Questions": counts.get("Question", 0),
+        "Other": counts.get("Other", 0)
     }
 
     cols = st.columns(len(metrics))
