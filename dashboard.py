@@ -629,9 +629,11 @@ if data:
         # format AFTER sorting
         display_df["created_at"] = display_df["created_at"].dt.strftime("%Y-%m-%d %H:%M")
 
+    
     # add category indicators
     category_badges = {
         "Concern": "🔴 Concern",
+        "Concerns": "🔴 Concerns",
         "Complaint": "🔴 Complaint",
         "Negative Feedback": "🔴 Negative Feedback",
 
@@ -644,6 +646,16 @@ if data:
         "Neutral": "⚪ Neutral",
         "Other": "⚪ Other"
     }
+
+    # remove accidental whitespace before matching
+    display_df["category"] = (
+        display_df["category"]
+        .astype("string")
+        .str.strip()
+        .map(category_badges)
+        .fillna(display_df["category"])
+    )
+
 
     display_df["category"] = display_df["category"].map(category_badges).fillna(display_df["category"])
 
