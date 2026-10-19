@@ -630,22 +630,38 @@ if data:
         display_df["created_at"] = display_df["created_at"].dt.strftime("%Y-%m-%d %H:%M")
 
     
+    
     # add category indicators
+    category_normalization = {
+        "Concerns": "Concern",
+        "Complaint": "Concern",
+        "Negative Feedback": "Concern",
+        "Positive Feedback": "Appreciation"
+    }
+
+    # Normalize categories to consistent singular labels
+    display_df["category"] = (
+        display_df["category"]
+        .replace(category_normalization)
+        .astype("string")
+        .str.strip()
+    )
+
     category_badges = {
         "Concern": "🔴 Concern",
-        "Concerns": "🔴 Concerns",
-        "Complaint": "🔴 Complaint",
-        "Negative Feedback": "🔴 Negative Feedback",
-
         "Appreciation": "🟢 Appreciation",
-        "Positive Feedback": "🟢 Positive Feedback",
-
         "Suggestion": "🟡 Suggestion",
         "Question": "❓ Question",
-
         "Neutral": "⚪ Neutral",
         "Other": "⚪ Other"
     }
+
+    display_df["category"] = (
+        display_df["category"]
+        .map(category_badges)
+        .fillna(display_df["category"])
+    )
+
 
     # remove accidental whitespace before matching
     display_df["category"] = (
