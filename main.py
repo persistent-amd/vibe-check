@@ -152,15 +152,22 @@ Respond with ONLY the category name.
         )
 
     except requests.HTTPError as exc:
-        # Log status and a limited response body, not credentials.
-        logger.error(
-            "Groq HTTP error: status=%s, body=%s",
-            exc.response.status_code if exc.response else "unknown",
-            exc.response.text[:500] if exc.response else "unavailable"
-        )
+        logger.exception("Groq HTTP error")
+        if exc.response is not None:
+            logger.error(
+                "Groq response status=%s, body=%s",
+                exc.response.status_code,
+                exc.response.text[:1000]
+            )
         raise HTTPException(
             status_code=502,
             detail="AI service request failed"
+        )
+    except requests.ConnectionError:
+        logger.exception("Could not connect to Groq API")
+        raise HTTPException(
+            status_code=502,
+            detail="Could not connect to AI service"
         )
 
     except (requests.RequestException, ValueError, KeyError, IndexError):
