@@ -74,7 +74,7 @@ Respond with ONLY the category name.
 
     data = {
         # "model": "llama-3.1-8b-instant",
-        "model": "openai/gpt-oss-20b", # update model, old one eol
+        "model": "openai/gpt-oss-20b", # update model, old one deprecated
         "messages": [
             {"role": "user", "content": prompt}
         ],
