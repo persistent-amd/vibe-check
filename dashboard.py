@@ -246,7 +246,7 @@ Cafeteria food quality is poor""")
 
 st.divider()
 
-# # ---------- previous MODERN HEADER ----------
+# # ---------- previous HEADER ----------
 # st.markdown("""
 #     <h1 style='text-align: center;'>Feedback Vibe Check Dashboard</h1>
 #     <p style='text-align: center; font-size:18px; color:gray;'>
