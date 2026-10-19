@@ -76,6 +76,8 @@ Respond with ONLY the category name.
         "Complaints": "Concerns",
         "Negative Feedback": "Concerns",
         "Positive Feedback": "Appreciation",
+        "Concerns": "Concern",
+        "Suggestions": "Suggestion",
     }
 
     category = normalization_map.get(category, category)
