@@ -4,6 +4,8 @@ import requests
 import os
 from dotenv import load_dotenv
 from supabase import create_client
+import logging
+from fastapi import HTTPException
 
 load_dotenv()
 
@@ -31,9 +33,21 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 class Feedback(BaseModel):
     text: str
 
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
 def classify_feedback(text):
+    if not GROQ_API_KEY:
+        logger.error("GROQ_API_KEY is missing")
+        raise HTTPException(
+            status_code=500,
+            detail="AI service is not configured"
+        )
+
     prompt = f"""
-Classify the student feedback into ONE of the following categories:
+Classify the student feedback into ONE category:
 
 Concern
 Complaint
@@ -66,23 +80,95 @@ Respond with ONLY the category name.
         "temperature": 0
     }
 
-    response = requests.post(url, headers=headers, json=data)
-    result = response.json()
+    try:
+        response = requests.post(
+            url,
+            headers=headers,
+            json=data,
+            timeout=30
+        )
 
-    category = result["choices"][0]["message"]["content"].strip()
+        response.raise_for_status()
+        result = response.json()
 
-    # normalize similar meanings
-    normalization_map = {
-        "Complaints": "Concerns",
-        "Negative Feedback": "Concerns",
-        "Positive Feedback": "Appreciation",
-        "Concerns": "Concern",
-        "Suggestions": "Suggestion",
-    }
+        if "choices" not in result:
+            logger.error(
+                "Unexpected Groq response: %s",
+                str(result)[:1000]
+            )
+            raise HTTPException(
+                status_code=502,
+                detail="AI provider returned an error response"
+            )
 
-    category = normalization_map.get(category, category)
+        choices = result.get("choices") or []
 
-    return category
+        if not choices:
+            logger.error("Groq returned an empty choices list")
+            raise HTTPException(
+                status_code=502,
+                detail="AI provider returned no classification"
+            )
+
+        category = (
+            choices[0].get("message", {}).get("content") or ""
+        ).strip()
+
+        if not category:
+            logger.error("Groq returned empty classification content")
+            raise HTTPException(
+                status_code=502,
+                detail="AI provider returned an empty classification"
+            )
+        normalization_map = {
+            "Complaints": "Concerns",
+            "Negative Feedback": "Concerns",
+            "Positive Feedback": "Appreciation"
+        }
+
+        category = normalization_map.get(category, category)
+
+        allowed_categories = {
+            "Concern", "Complaint", "Negative Feedback",
+            "Appreciation", "Positive Feedback",
+            "Suggestion", "Question", "Neutral", "Other",
+            "Concerns"
+        }
+
+        if category not in allowed_categories:
+            logger.error("Unexpected category returned by Groq")
+            raise HTTPException(
+                status_code=502,
+                detail="AI returned an unexpected category"
+            )
+
+        return category
+
+    except requests.Timeout:
+        logger.exception("Groq request timed out")
+        raise HTTPException(
+            status_code=504,
+            detail="AI service timed out"
+        )
+
+    except requests.HTTPError as exc:
+        # Log status and a limited response body, not credentials.
+        logger.error(
+            "Groq HTTP error: status=%s, body=%s",
+            exc.response.status_code if exc.response else "unknown",
+            exc.response.text[:500] if exc.response else "unavailable"
+        )
+        raise HTTPException(
+            status_code=502,
+            detail="AI service request failed"
+        )
+
+    except (requests.RequestException, ValueError, KeyError, IndexError):
+        logger.exception("Groq response processing failed")
+        raise HTTPException(
+            status_code=502,
+            detail="Could not process the AI response"
+        )
 
 
 @app.post("/analyze")
